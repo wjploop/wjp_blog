@@ -61,6 +61,7 @@ public void requestChildFocus(View child, View focused) {
     checkThread();
     scheduleTraversals();
 }
+
 ```
 到此，可以知道，焦点会在加载之后确定。
 
