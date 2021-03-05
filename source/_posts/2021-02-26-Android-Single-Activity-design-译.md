@@ -1,9 +1,11 @@
 ---
-title: Android: Single Activity design [(译)](https://proandroiddev.com/part-3-single-activity-architecture-514791724172)  
+title: Android: Single Activity design (译)  
 date: 2021-02-26 11:28:40  
 tags:  翻译  
 categories:
 ---
+
+> [原文]((https://proandroiddev.com/part-3-single-activity-architecture-514791724172))
 
 # Android: 单一Activity设计思路
 
