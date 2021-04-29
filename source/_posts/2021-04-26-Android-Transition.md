@@ -92,7 +92,7 @@ size,color的属性。
             sceneChangeSetup(sceneRoot, transitionClone);
             // 将当前sense设为空，即达到退出的效果
             Scene.setCurrentScene(sceneRoot, null);
-            // 设置返回重新返回当前Scene时的transition,跟踪进入
+            // 当scene变化时执行Transition，看看怎么监听sense变化的
             sceneChangeRunTransition(sceneRoot, transitionClone);
         }
     }
@@ -106,6 +106,7 @@ size,color的属性。
     }
 
     
+        // 当该View的脱离Window时先执行动画
         @Override
         public void onViewDetachedFromWindow(View v) {
             removeListeners();
@@ -120,6 +121,9 @@ size,color的属性。
             mTransition.clearValues(true);
         }
 
+        // 在此刻，视图树上所有的View都已经测量，放置好位置，只是没有绘制
+        // 在这个时间点，用户可以选择是否满意当前的布局，return true绘制当前帧， return false可以取消当前帧的绘制，
+
         @Override
         public boolean onPreDraw() {
             removeListeners();
@@ -131,7 +135,6 @@ size,color的属性。
             }
 
             // Add to running list, handle end to remove it
-            // 在绘制前，
             final ArrayMap<ViewGroup, ArrayList<Transition>> runningTransitions =
                     getRunningTransitions();
             ArrayList<Transition> currentTransitions = runningTransitions.get(mSceneRoot);
@@ -157,9 +160,89 @@ size,color的属性。
                     runningTransition.resume(mSceneRoot);
                 }
             }
+            
+            // 播放Transition,其实是 create animators and run 
             mTransition.playTransition(mSceneRoot);
-
+                    // 适应 对比前后，创建很多animator
+                >>  createAnimators(sceneRoot, mStartValues, mEndValues, mStartValuesList, mEndValuesList);
+                >>  runAnimators();
             return true;
+        }
+    }
+    
+```
+
+## 那启动一个Activity是如何执行Transition呢？
+
+
+```
+    // options 不为空，默认不传也会获取主题默认的，不过需要当前Window支持 Window.FEATURE_ACTIVITY_TRANSITIONS
+    startActivityForResult(intent, -1, options);
+    // 取消输入开始退出
+    >> cancelInputsAndStartExitTransition
+   
+    
+    public void startExitOutTransition(Activity activity, Bundle options) {
+        mEnterTransitionCoordinator = null;
+        if (!activity.getWindow().hasFeature(Window.FEATURE_ACTIVITY_TRANSITIONS) ||
+                mExitTransitionCoordinators == null) {
+            return;
+        }
+        ActivityOptions activityOptions = new ActivityOptions(options);
+        if (activityOptions.getAnimationType() == ActivityOptions.ANIM_SCENE_TRANSITION) {
+            int key = activityOptions.getExitCoordinatorKey();
+            int index = mExitTransitionCoordinators.indexOfKey(key);
+            if (index >= 0) {
+                mCalledExitCoordinator = mExitTransitionCoordinators.valueAt(index).get();
+                mExitTransitionCoordinators.removeAt(index);
+                if (mCalledExitCoordinator != null) {
+                    mExitingFrom = mCalledExitCoordinator.getAcceptedNames();
+                    mExitingTo = mCalledExitCoordinator.getMappedNames();
+                    mExitingToView = mCalledExitCoordinator.copyMappedViews();
+                    mCalledExitCoordinator.startExit();
+                }
+            }
+        }
+    }
+    
+    public void startExit() {
+        if (!mIsExitStarted) {
+            backgroundAnimatorComplete();
+            mIsExitStarted = true;
+            pauseInput();
+            ViewGroup decorView = getDecor();
+            if (decorView != null) {
+               // 禁止 layout乱入，layout也会导致 draw，而我们依赖着 draw前的时间点创建animator
+                decorView.suppressLayout(true);
+            }
+            // 这个将共享元素移动到OverLay层，最高层哦
+            moveSharedElementsToOverlay();
+            startTransition(new Runnable() {
+                @Override
+                public void run() {
+                    if (mActivity != null) {
+                        beginTransitions();
+                    } else {
+                        startExitTransition();
+                    }
+                }
+            });
+        }
+    }
+    
+    
+    private void startExitTransition() {
+        Transition transition = getExitTransition();
+        ViewGroup decorView = getDecor();
+        if (transition != null && decorView != null && mTransitioningViews != null) {
+            setTransitioningViewsVisiblity(View.VISIBLE, false);
+            TransitionManager.beginDelayedTransition(decorView, transition);
+            setTransitioningViewsVisiblity(View.INVISIBLE, false);
+            // 请求重绘，正好对应上了，onPreDraw
+            // 否则没机会执行transition
+            decorView.invalidate();
+        } else {
+            transitionStarted();
         }
     }
 ```
