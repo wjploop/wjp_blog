@@ -1,5 +1,5 @@
 ---
-title: Android: Single Activity design (译)  
+title: Android Single Activity design (译)  
 date: 2021-02-26 11:28:40  
 tags:  翻译  
 categories:
