@@ -16,9 +16,9 @@ categories:
 
 为何省空间？
 
-其key直接使用了基本类型int，不同于HashMap存储时经过装箱拆箱使用Integer对象，而且，当确定value也是一种基本类型时，
-可以使用对相应得SparseXXXArray,比如对于 <Integer,Integer>，可以使用 `SparseIntArray`，这样value也可以存储
-在基本类型里面，而基本类型所占内存是远小于对象的。
+其key直接使用了基本类型int，不同于HashMap存储时经过装箱使用Integer，而且，当确定value也是一种基本类型时，
+可以使用对相应得SparseXXXArray，比如对于 <Integer,Integer>，可以使用 `SparseIntArray`，这样value也可以存储
+在基本类型数组，而基本类型所占内存是远小于对象的。
 
 `SparseArray`内部有两个数组，`mKeys`, `mValues`, key直接升序放置在 `mKeys`数组中，其插入过程：
 ```
@@ -28,23 +28,29 @@ key -> binarySearch -> index
 ```
 将key转换成index是一次二分查找得过程，其要求key在数组中有序的。
 
-而 HashMap其内部可以看作有一个 `tables`，其类型是一个Entry<Key,Value>，插入过程：
+而 HashMap 其内部可以看作有一个 `tables`，元素类型是一个Entry<Key,Value>，其插入过程：
 
 ```
 key -> hash -> index
      h = key.hashCode()
-     hash = h ^ ( h >>> 16) // 将高16位的比特位与地位异或，高16位相当于取非了，从而把高位的信息分配到低位上，这样做的原因是，最后我们可能
-     // 利用到的是地位的信息，（假设 n = table.length <= pow(2,16)，那么在转移成index时，我们仅仅利用到了hash的低16位）
+     hash = h ^ ( h >>> 16) 
      ensure hash < n ,(n = table.length)
      index = hash & (n - 1)   // 依赖n为2的k次方
-     // 理想情况，table[index]没有元素，即无hash冲突
-     // 冲突时，转为链表，其实存储时，tables存储的就是链表节点，甚至为树节点
-     // 存在类存在这样的继承关系，Entry > Node > TreeNode
+
 ```
+生成hash时，将高16位与低位异或，高16位相当于取非了，从而把高位的信息分配到低位上，这样做的原因是，最后我们可以
+利用到的高位的信息。    
+为何？假设 n = table.length <= pow(2,16)，那么在转移成index时，我们仅仅利用到了hash的低16位。
+
+生后hash后，要确保hash值能在范围n里面，其思路是指截取n包括的低比特位，大于n的比特位都丢掉的，这样便得到所需的index。
+
+使用index时，理想情况下，table[index]没有元素，即无hash冲突。  
+冲突时，转为链表，其实存储时，tables存储的就是链表节点，甚至为树节点。  
+存在类存在这样的继承关系，Entry > Node > TreeNode。    
 
 两者都存在从 key 到 index的过程，理论上，可以看到查找时间复杂度，前者为 O(logN)，后者为 O(1)，似乎后者更胜一筹。 但应了解到，这里说的时间
-复杂度是简化分析的结果，忽略了复杂度前面的常量，前者常量可能是50，后者可能是1，当数据量N比较小时，实际上是前者更快一点的。这一点，做题时也有所
-体会，有时理论复杂度低的解法表现更慢，原因是用例N低了。 
+复杂度是简化分析后的结果，忽略了复杂度前面的常量，前者常量可能是1，后者可能是50，当数据量N比较小时，假设N=20，`1 * log2(20) < 50 * 1 `
+实际上是前者更快一点的。这一点，做题时也有所体会，有时暴力比最优解更快，原因是用例N太小了。 
 
 ### 源码分析
 
@@ -152,7 +158,7 @@ public class SparseArray<E> implements Cloneable {
     }
 ```
 
-### remove
+#### remove
 
 可以欣赏的一点就是，频繁删除元素后，不会马上整理Values数组，而时延后到查询/插入时才会整理，整理就是清除无用的DELETED坑位
 
@@ -196,7 +202,7 @@ public class SparseArray<E> implements Cloneable {
 
 别人家写的，虽然自己也能感受到的，但表达出来还是很困难。
 
-引用大佬总结的三个关键字，双数组，二分查找，DELETED标记
+引用大佬总结的三个关键字，*双数组，二分查找，DELETED标记*。
 
 
 
