@@ -3,11 +3,6 @@ title: LoadingLayout
 date: 2019-04-21 07:27:38
 tags: 
 - android
-- 自定义View
-
-categories: 
-- [code, android]
-
 ---
 
 ### 自定义LoadingLayout的笔记
@@ -32,7 +27,7 @@ categories:
 提供了在style.xml配置，或在代码中配置。配置`normal`状态没有意义，所以可以为其余三个状态配置对应的资源文件。
 `normal`状态的是处于`LoadingLayout`的子视图，配置这个关系，可以在xml文件中配置，也提供了`wrap(view)`,
 'wrap(activity)'方法手动配置，无需修改xml文件。 
- 
+
 由于空白页，错误页都是常见的，一般会由一个图片和描述组成，项目不同只要修改相应的图片和文字，所以，
 类库提供了直接配置相应图片，文字。在错误页提供了"重新加载接口"。
 

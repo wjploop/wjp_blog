@@ -2,8 +2,7 @@
 title: ViewPager
 date: 2019-08-11 09:53:02
 tags: android
-categories:
-- [code, android]
+
 ---
 
 ViewPager 其作用是分页展示一个内容，现在Android主流应用布局，如微信，就是主页面是一个ViewPager，底部一个TabLayout构成。

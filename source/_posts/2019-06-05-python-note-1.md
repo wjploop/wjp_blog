@@ -2,7 +2,7 @@
 title: python-note_1
 date: 2019-06-05 09:04:13
 tags: python
-categories: python
+
 ---
 
 ### 面向对象

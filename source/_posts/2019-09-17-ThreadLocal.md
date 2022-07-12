@@ -2,13 +2,12 @@
 title: ThreadLocal
 date: 2019-09-17 15:52:51
 tags: java 
-categories:
-- code 
+
 ---
 
 ## ThreadLocal
 
---- 
+---
 
 
 /**
