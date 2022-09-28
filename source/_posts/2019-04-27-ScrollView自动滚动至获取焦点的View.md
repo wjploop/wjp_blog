@@ -1,5 +1,5 @@
 ---
-title: android_note_0
+title: ScrollView自动滚动至获取焦点的View
 date: 2019-04-27 15:14:27
 tags: android
 categories: 
